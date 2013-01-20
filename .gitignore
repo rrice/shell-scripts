@@ -1,0 +1,14 @@
+
+# Backup files
+*~$
+
+# Vim swap files
+*.swp
+*.swo
+
+# General files / directories
+*.lock
+.DS_Store
+*.out
+*.log
+.svn

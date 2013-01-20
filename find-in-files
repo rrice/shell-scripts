@@ -1,0 +1,92 @@
+#! /usr/bin/env sh
+#
+# -*- mode: Shell-script; fill-column: 75; comment-column: 50; -*-
+#
+# Copyright (c) 2013 Ralph Allan Rice <ralph.rice@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+SCRIPT=$(basename "${0}")
+MAX_DEPTH_OPTION="-maxdepth 1"
+
+show_usage() {
+   echo "Usage: ${1} [OPTIONS]... \"REGEXP-PATTERN\" \"FILE-PATTERN\"" 1>&2 
+}
+
+show_help() {
+    show_usage "${1}"
+    cat 1>&2 <<-HELPDOC
+
+Finds the text described by REGEXP-PATTERN in the FILE-PATTERN. Each pattern
+must be escaped in quotation marks to prevent shell expansion.
+
+Options:
+       -h       Shows this help message.
+       -R       Recurse directories.
+       -i       Case insensitive search.
+
+HELPDOC
+}
+
+# No options shows usage.
+if [ $# -lt 1 ]; then
+    show_usage "${SCRIPT}"
+    exit 1
+fi
+
+# Parse options
+while getopts ":hRi" OPTION; do
+    case ${OPTION} in
+	R) 
+	    MAX_DEPTH_OPTION=
+	    ;;
+        i)
+	    CASE_INSENSITIVE_OPTION="-i"
+	    ;;
+	h)
+            show_help
+	    exit 1
+	    ;;
+	?) 
+	    echo "${SCRIPT}: invalid option -- ${OPTARG}" 1>&2
+	    show_usage "${SCRIPT}"
+	    echo "Try '${SCRIPT} -h' for more information."
+	    exit 1
+	    ;;
+    esac
+done
+
+shift $((${OPTIND} - 1))
+
+# There should be two remaining options required.
+if [ $# -ne 2 ]; then
+    echo "${SCRIPT}: missing parameters $# supplied"
+    show_usage "${SCRIPT}"
+    exit 1
+fi
+
+#
+# First option is the REGEXP-PATTERN to search for in each file.
+# Second option is the FILE-PATTERN to files to search against.
+#
+find ${MAX_DEPTH_OPTION} -name "${2}" | xargs -I## -n1 grep ${CASE_INSENSITIVE_OPTION} --color=auto -n -H -P "${1}" "##"
+
+
